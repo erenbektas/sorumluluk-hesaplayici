@@ -1,14 +1,14 @@
 [Setup]
 AppId={{A1C3D5E7-2B4F-6A8C-9E0D-1F2A3B4C5D6E}
 AppName=Sorumluluk Hesaplayıcı
-AppVersion=2.0.0
-AppVerName=Sorumluluk Hesaplayıcı 2.0.0
+AppVersion=2.1.0
+AppVerName=Sorumluluk Hesaplayıcı 2.1.0
 AppPublisher=Y. Eren Bektaş
 DefaultDirName={autopf}\SorumlulukHesaplayici
 DefaultGroupName=Sorumluluk Hesaplayıcı
 UninstallDisplayIcon={app}\SorumlulukHesaplama.exe
 OutputDir=installer-output
-OutputBaseFilename=SorumlulukHesaplayici-v2.0.0-Setup
+OutputBaseFilename=SorumlulukHesaplayici-v2.1.0-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 SetupIconFile=src\SorumlulukHesaplama\icon.ico

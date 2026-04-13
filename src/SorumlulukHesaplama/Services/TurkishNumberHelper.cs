@@ -48,6 +48,67 @@ public static class TurkishNumberHelper
     }
 
     /// <summary>
+    /// Parse a number extracted from an imported source (e.g. PDF).
+    /// Handles both Turkish (1.000,99) and dot-decimal (1.2345) formats
+    /// using separator heuristics instead of assuming Turkish conventions.
+    /// </summary>
+    public static bool TryParseImportedNumber(string str, out double value)
+    {
+        value = 0;
+        if (string.IsNullOrWhiteSpace(str)) return false;
+
+        var normalized = str.Trim();
+        if (!Regex.IsMatch(normalized, @"\d")) return false;
+
+        bool hasDot = normalized.Contains('.');
+        bool hasComma = normalized.Contains(',');
+
+        if (hasDot && hasComma)
+        {
+            // Both present: last separator is decimal, other is grouping
+            int lastDot = normalized.LastIndexOf('.');
+            int lastComma = normalized.LastIndexOf(',');
+            if (lastComma > lastDot)
+            {
+                // 1.000,99 → comma is decimal
+                normalized = normalized.Replace(".", "").Replace(",", ".");
+            }
+            else
+            {
+                // 1,000.99 → dot is decimal
+                normalized = normalized.Replace(",", "");
+            }
+        }
+        else if (hasComma)
+        {
+            // Only comma: treat as decimal separator (1234,56 or 0,5)
+            normalized = normalized.Replace(",", ".");
+        }
+        else if (hasDot)
+        {
+            // Only dot: use pattern to distinguish grouping from decimal.
+            // Thousand-grouped integers look like 1.000 or 1.000.000 (groups of 3 after each dot).
+            // Decimal values look like 1.2345 or 0.99.
+            if (Regex.IsMatch(normalized, @"^\d{1,3}(\.\d{3})+$"))
+            {
+                // Pattern matches grouped thousands with no fractional part (e.g. 1.000, 12.345.678)
+                normalized = normalized.Replace(".", "");
+            }
+            // Otherwise keep the dot as a decimal point (e.g. 1.2345, 0.99, 1.08)
+        }
+
+        return double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    /// <summary>
+    /// Parse imported number. Returns 0 on failure.
+    /// </summary>
+    public static double ParseImported(string str)
+    {
+        return TryParseImportedNumber(str, out var result) ? result : 0;
+    }
+
+    /// <summary>
     /// Format number in Turkish locale (1.234,56)
     /// </summary>
     public static string Format(double num, int decimals = 2)

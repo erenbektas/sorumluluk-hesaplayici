@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
@@ -9,12 +10,22 @@ namespace SorumlulukHesaplama.Services;
 
 public static class PdfExchangeRateParser
 {
+    public const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+    public const int MaxPageCount = 10;
+    public const int MaxTextLength = 500_000;
+
     /// <summary>
     /// Parse TCMB exchange rate PDF and extract date, EUR/USD, SDR/USD rates.
     /// Uses line-based label matching for reliable extraction.
     /// </summary>
     public static ExchangeData Parse(string filePath)
     {
+        // Guardrail: file size
+        var fileInfo = new FileInfo(filePath);
+        if (fileInfo.Length > MaxFileSizeBytes)
+            throw new InvalidOperationException(
+                $"Dosya boyutu çok büyük ({fileInfo.Length / (1024 * 1024):F1} MB). Maksimum {MaxFileSizeBytes / (1024 * 1024)} MB desteklenmektedir.");
+
         var pageTexts = ExtractPageTexts(filePath);
         var fullText = string.Join("\n", pageTexts);
 
@@ -63,6 +74,10 @@ public static class PdfExchangeRateParser
                     Debug.WriteLine($"[PdfParser] SDR/USD from line: {sdrUsdRate} | line: {line}");
                 }
             }
+
+            // Early exit: stop once both rates are found
+            if (eurUsdRate > 0 && sdrUsdRate > 0)
+                break;
         }
 
         // Strategy 2: Token-based fallback (original approach) if line-based failed
@@ -121,7 +136,7 @@ public static class PdfExchangeRateParser
         double found = 0;
         foreach (Match m in matches)
         {
-            var val = TurkishNumberHelper.Parse(m.Value);
+            var val = TurkishNumberHelper.ParseImported(m.Value);
             if (val > min && val < max)
                 found = val; // keep last match (cross rate is typically rightmost)
         }
@@ -140,7 +155,7 @@ public static class PdfExchangeRateParser
 
             for (int j = i + 1; j < Math.Min(i + searchWindow, tokens.Length); j++)
             {
-                var val = TurkishNumberHelper.Parse(tokens[j]);
+                var val = TurkishNumberHelper.ParseImported(tokens[j]);
                 if (val > min && val < max)
                     return val;
             }
@@ -149,7 +164,8 @@ public static class PdfExchangeRateParser
     }
 
     /// <summary>
-    /// Extract full page text from PDF using iText7.
+    /// Extract page text from PDF using iText7.
+    /// Enforces page count and total text length limits.
     /// </summary>
     private static List<string> ExtractPageTexts(string filePath)
     {
@@ -158,11 +174,23 @@ public static class PdfExchangeRateParser
         using var pdfReader = new PdfReader(filePath);
         using var pdfDoc = new PdfDocument(pdfReader);
 
-        for (int pageNum = 1; pageNum <= pdfDoc.GetNumberOfPages(); pageNum++)
+        var totalPages = pdfDoc.GetNumberOfPages();
+        if (totalPages > MaxPageCount)
+            throw new InvalidOperationException(
+                $"PDF çok fazla sayfa içeriyor ({totalPages}). Maksimum {MaxPageCount} sayfa desteklenmektedir.");
+
+        int totalTextLength = 0;
+        for (int pageNum = 1; pageNum <= totalPages; pageNum++)
         {
             var page = pdfDoc.GetPage(pageNum);
             var strategy = new SimpleTextExtractionStrategy();
             var pageText = PdfTextExtractor.GetTextFromPage(page, strategy);
+
+            totalTextLength += pageText.Length;
+            if (totalTextLength > MaxTextLength)
+                throw new InvalidOperationException(
+                    $"PDF metin içeriği çok büyük. Maksimum {MaxTextLength:N0} karakter desteklenmektedir.");
+
             pages.Add(pageText);
             Debug.WriteLine($"[PdfParser] Page {pageNum} text length: {pageText.Length}");
         }
