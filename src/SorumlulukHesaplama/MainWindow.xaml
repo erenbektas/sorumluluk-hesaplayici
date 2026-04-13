@@ -1,0 +1,383 @@
+<Window x:Class="SorumlulukHesaplama.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:SorumlulukHesaplama.ViewModels"
+        Title="Sorumluluk Hesaplayıcı" Height="700" Width="650"
+        MinHeight="600" MinWidth="550"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBg}"
+        Icon="icon.png"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Back button -->
+            <Button x:Name="BtnBack" Grid.Column="0" Content="&#x2190;" FontSize="16"
+                    Command="{Binding BackCommand}" Padding="8,4" Margin="0,0,10,0"
+                    Background="Transparent" Foreground="{StaticResource TextSecondary}"
+                    ToolTip="Geri Dön" Visibility="Collapsed"/>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="Sorumluluk Hesaplayıcı" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text="Grup Sigorta Ekspertiz Hizmetleri Limited Şirketi"
+                           FontSize="9" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Reset button -->
+            <Button x:Name="BtnReset" Grid.Column="2" Content="Yeni Hesaplama"
+                    Command="{Binding ResetCommand}" FontSize="12"
+                    Background="Transparent" Foreground="{StaticResource TextSecondary}"
+                    Padding="10,5" Visibility="Collapsed"/>
+        </Grid>
+
+        <!-- ============================================ -->
+        <!-- PAGE 1: Upload -->
+        <!-- ============================================ -->
+        <Grid Grid.Row="1" x:Name="UploadPage">
+            <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8"
+                    Background="{StaticResource CardBg}" x:Name="DropBorder">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <!-- Upload icon -->
+                    <Border Width="80" Height="80" CornerRadius="16"
+                            Background="#0A4AADE0" HorizontalAlignment="Center" Margin="0,0,0,20">
+                        <TextBlock Text="&#x2B06;" FontSize="36" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" Foreground="{StaticResource AccentColor}"/>
+                    </Border>
+
+                    <TextBlock Text="Dosyayı Sürükle" FontSize="22" FontWeight="Bold"
+                               HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                    <TextBlock Text="TCMB Döviz Kuru Çıktısı (PDF)" FontSize="12"
+                               Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"
+                               Margin="0,0,0,20"/>
+
+                    <Button Content="Dosya Seç" Command="{Binding BrowsePdfCommand}"
+                            Style="{StaticResource AccentButton}" HorizontalAlignment="Center"
+                            Padding="25,10"/>
+
+                    <!-- Loading indicator -->
+                    <TextBlock x:Name="TxtLoading" Text="PDF okunuyor..." FontSize="12"
+                               Foreground="{StaticResource AccentColor}" HorizontalAlignment="Center"
+                               Margin="0,15,0,0" Visibility="Collapsed"/>
+
+                    <!-- Error message -->
+                    <Border x:Name="ErrorBorder" CornerRadius="8" Padding="15,10" Margin="0,15,0,0"
+                            Background="#1ACC0000" BorderBrush="#33CC0000" BorderThickness="1"
+                            MaxWidth="400" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtError" TextWrapping="Wrap" TextAlignment="Center"
+                                   FontSize="12" Foreground="#FF6666"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ============================================ -->
+        <!-- PAGE 2: Form -->
+        <!-- ============================================ -->
+        <Grid Grid.Row="1" x:Name="FormPage" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel MaxWidth="550" HorizontalAlignment="Center" Margin="0,0,0,10">
+
+                    <!-- Exchange Rate Cards -->
+                    <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                            CornerRadius="8" Background="{StaticResource CardBg}" Padding="15" Margin="0,0,0,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Date -->
+                            <Border Grid.Column="0" CornerRadius="6" Background="#1AA855F7"
+                                    BorderBrush="#33A855F7" BorderThickness="1" Padding="10,8" Margin="0,0,5,0">
+                                <StackPanel>
+                                    <TextBlock Text="Kur Tarihi" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock x:Name="TxtDate" FontSize="15" FontWeight="Bold" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- EUR/USD -->
+                            <Border Grid.Column="1" CornerRadius="6" Background="#1AEAB308"
+                                    BorderBrush="#33EAB308" BorderThickness="1" Padding="10,8" Margin="3,0,3,0">
+                                <StackPanel>
+                                    <TextBlock Text="EUR/USD" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock x:Name="TxtEurUsd" FontSize="15" FontWeight="Bold" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- SDR/USD -->
+                            <Border Grid.Column="2" CornerRadius="6" Background="#1A06B6D4"
+                                    BorderBrush="#3306B6D4" BorderThickness="1" Padding="10,8" Margin="5,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="SDR/USD" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock x:Name="TxtSdrUsd" FontSize="15" FontWeight="Bold" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Form Card -->
+                    <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                            CornerRadius="8" Background="{StaticResource CardBg}" Padding="15">
+                        <StackPanel>
+                            <TextBlock Text="Hesaplama Verileri" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <!-- Row 1: Loading Date + Gross Kg side by side -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4">
+                                        <Run Text="Yükleme Tarihi"/>
+                                        <Run Text="(opsiyonel)" FontSize="9" Foreground="#555555"/>
+                                    </TextBlock>
+                                    <TextBox Text="{Binding LoadingDate, UpdateSourceTrigger=PropertyChanged}"
+                                             MaxLength="10"/>
+                                    <TextBlock x:Name="TxtDateError" FontSize="10" Foreground="#FF6666"
+                                               Margin="0,2,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Hasarlı Emtia Brüt Kg *" FontSize="11"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding GrossKgText, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock x:Name="TxtKgError" FontSize="10" Foreground="#FF6666"
+                                               Margin="0,2,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Row 2: Assessment EUR (full width) -->
+                            <TextBlock Text="Tespit Tutarı (EUR) *" FontSize="11"
+                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding AssessmentEurText, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,2"/>
+                            <TextBlock x:Name="TxtEurError" FontSize="10" Foreground="#FF6666"
+                                       Margin="0,0,0,6" Visibility="Collapsed"/>
+
+                            <!-- Transport Type + SDR side by side -->
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Taşıma Türü *" FontSize="11"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,0,5"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton Grid.Column="0" Content="Karayolu (CMR)"
+                                                     IsChecked="{Binding IsRoad}" Margin="0,0,3,0" FontSize="11" Padding="5,6"/>
+                                        <RadioButton Grid.Column="1" Content="Denizyolu"
+                                                     IsChecked="{Binding IsSea}" Margin="2,0,2,0" FontSize="11" Padding="5,6"/>
+                                        <RadioButton Grid.Column="2" Content="Diğer"
+                                                     IsChecked="{Binding IsOther}" Margin="3,0,0,0" FontSize="11" Padding="5,6"/>
+                                    </Grid>
+                                    <TextBlock x:Name="TxtSdrError" FontSize="10" Foreground="#FF6666"
+                                               Margin="0,2,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
+                                    <TextBlock Text="SDR Sabiti" FontSize="10"
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TxtCustomSdr"
+                                             Text="{Binding CustomSdrText, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="75" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="TxtSdrDisplay" Text="{Binding SdrConstantDisplay}"
+                                               FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentColor}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Calculate Button -->
+                            <Button Content="Hesapla" Command="{Binding CalculateCommand}"
+                                    Style="{StaticResource AccentButton}" Margin="0,12,0,0"
+                                    Padding="20,9" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ============================================ -->
+        <!-- PAGE 3: Result -->
+        <!-- ============================================ -->
+        <Grid Grid.Row="1" x:Name="ResultPage" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel MaxWidth="550" HorizontalAlignment="Center">
+
+                    <!-- Date Warning -->
+                    <Border x:Name="DateWarningBorder" CornerRadius="8" Padding="12,10" Margin="0,0,0,10"
+                            Background="#1AF59E0B" BorderBrush="#33F59E0B" BorderThickness="1"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="Uyarı: Tarih Uyumsuzluğu" FontWeight="Bold"
+                                       FontSize="13" Foreground="#F59E0B"/>
+                            <TextBlock Text="Girdiğiniz yükleme tarihi, tablodaki tarihten daha sonra. Lütfen döviz kuru belgesini kontrol edin."
+                                       FontSize="11" Foreground="#B07D0B" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Detail Cards -->
+                    <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                            CornerRadius="8" Background="{StaticResource CardBg}" Padding="15" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="HESAPLAMA DETAYLARI" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,10"/>
+
+                            <!-- Row 1: 3 cards -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" x:Name="CardKg" Style="{x:Null}"
+                                        CornerRadius="6" Background="{StaticResource SurfaceMuted}" BorderBrush="{StaticResource BorderColor}"
+                                        BorderThickness="1" Padding="10,8" Margin="0,0,3,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Brüt Kg" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResKg" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" CornerRadius="6" Background="{StaticResource SurfaceMuted}"
+                                        BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                        Padding="10,8" Margin="3,0,3,0">
+                                    <StackPanel>
+                                        <TextBlock Text="SDR Sabiti" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResSdr" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" CornerRadius="6" Background="{StaticResource SurfaceMuted}"
+                                        BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                        Padding="10,8" Margin="3,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Toplam SDR" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResTotalSdr" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Row 2: 3 cards -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" CornerRadius="6" Background="{StaticResource SurfaceMuted}"
+                                        BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                        Padding="10,8" Margin="0,0,3,0">
+                                    <StackPanel>
+                                        <TextBlock Text="SDR/USD Kuru" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResSdrRate" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" CornerRadius="6" Background="{StaticResource SurfaceMuted}"
+                                        BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                        Padding="10,8" Margin="3,0,3,0">
+                                    <StackPanel>
+                                        <TextBlock Text="EUR/USD Kuru" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResEurRate" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" CornerRadius="6" Background="{StaticResource SurfaceMuted}"
+                                        BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                        Padding="10,8" Margin="3,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Yükleme Tarihi" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResDate" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Row 3: 2 comparison cards -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" x:Name="CardSdrEur" CornerRadius="6"
+                                        Background="{StaticResource SurfaceMuted}" BorderBrush="{StaticResource BorderColor}"
+                                        BorderThickness="1" Padding="10,8" Margin="0,0,3,0">
+                                    <StackPanel>
+                                        <TextBlock Text="SDR Tutarı (EUR)" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResSdrEur" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" x:Name="CardAssessment" CornerRadius="6"
+                                        Background="{StaticResource SurfaceMuted}" BorderBrush="{StaticResource BorderColor}"
+                                        BorderThickness="1" Padding="10,8" Margin="3,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Tespit Tutarı (EUR)" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtResAssessment" FontSize="14" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Comparison indicator -->
+                            <Border x:Name="ComparisonBorder" CornerRadius="8" Padding="12,8" Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="ComparisonDot" Width="10" Height="10" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="TxtComparison" FontSize="12" FontWeight="SemiBold"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Result Text Preview -->
+                    <Border BorderBrush="#334AADE0" BorderThickness="1" CornerRadius="8"
+                            Background="{StaticResource SurfaceMuted}" Padding="15" Margin="0,0,0,10"
+                            MaxHeight="250">
+                        <StackPanel>
+                            <TextBlock Text="KOPYALANACAK METİN ÖNİZLEME" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}" Margin="0,0,0,8"/>
+                            <TextBlock x:Name="TxtPreview" TextWrapping="Wrap" FontSize="11"
+                                       Foreground="{StaticResource PreviewText}" LineHeight="18"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Copy Button -->
+                    <Button x:Name="BtnCopy" Content="Panoya Kopyala" Command="{Binding CopyCommand}"
+                            Style="{StaticResource AccentButton}" HorizontalAlignment="Stretch"
+                            Padding="20,12" FontSize="15" Margin="0,0,0,10"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Bottom Bar -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,5">
+            <Button Content="&#x24D8;" ToolTip="Hakkında" Click="BtnInfo_Click"
+                    Width="30" Height="30" Padding="0" FontSize="18" VerticalAlignment="Center"
+                    Background="Transparent" Foreground="{StaticResource TextSecondary}"/>
+        </StackPanel>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="3" Text="{Binding StatusText}" Foreground="{StaticResource TextSecondary}"
+                   FontSize="12" Margin="0,0,0,0"/>
+    </Grid>
+</Window>
