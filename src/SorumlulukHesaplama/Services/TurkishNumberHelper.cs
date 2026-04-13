@@ -29,6 +29,11 @@ public static class TurkishNumberHelper
         {
             normalized = normalized.Replace(",", ".");
         }
+        // If it only contains . then . is thousand separator (Turkish format)
+        else if (normalized.Contains('.'))
+        {
+            normalized = normalized.Replace(".", "");
+        }
 
         return double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
     }

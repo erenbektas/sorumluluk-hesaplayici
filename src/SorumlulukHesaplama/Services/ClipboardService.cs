@@ -83,9 +83,12 @@ public static class ClipboardService
         // Line breaks
         content = Regex.Replace(content, @"<br\s*/?>", "\\line ", RegexOptions.IgnoreCase);
 
+        // Centered paragraphs
+        content = Regex.Replace(content, @"<p[^>]*text-align:\s*center[^>]*>", "\\pard\\qc ", RegexOptions.IgnoreCase);
+
         // Paragraphs
         content = Regex.Replace(content, @"<p[^>]*>", "", RegexOptions.IgnoreCase);
-        content = Regex.Replace(content, @"</p>", "\\par ", RegexOptions.IgnoreCase);
+        content = Regex.Replace(content, @"</p>", "\\pard\\par ", RegexOptions.IgnoreCase);
 
         // Remaining spans
         content = Regex.Replace(content, @"<span[^>]*>([^<]*)</span>", "$1", RegexOptions.IgnoreCase);
